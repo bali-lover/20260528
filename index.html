@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>심학중 버스킹 초대장</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;700;900&family=Gaegu:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    pointer-events: none;
+    padding: 20px;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 슬라이드 1: 어둠 속 스포트라이트 */
+  .slide-1 {
+    background: radial-gradient(circle at 50% 60%, #1a1a2e 0%, #000 70%);
+  }
+  .slide-1 .spotlight {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,220,100,0.4) 0%, transparent 70%);
+    animation: pulse 2s ease-in-out infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .slide-1 .emoji {
+    font-size: 80px;
+    filter: drop-shadow(0 0 30px rgba(255,200,50,0.6));
+  }
+  .slide-1 .whisper {
+    margin-top: 40px;
+    font-size: clamp(14px, 3vw, 20px);
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 8px;
+    animation: fadeIn 1.5s ease 0.5s forwards;
+    opacity: 0;
+  }
+
+  /* 슬라이드 2: 감성 도입 */
+  .slide-2 {
+    background: linear-gradient(180deg, #74b9ff 0%, #a29bfe 50%, #dfe6e9 100%);
+  }
+  .slide-2 .line {
+    font-size: clamp(18px, 4vw, 28px);
+    color: rgba(255,255,255,0.7);
+    font-weight: 300;
+    text-align: center;
+    line-height: 2.2;
+    letter-spacing: 2px;
+  }
+  .slide-2 .line span {
+    display: block;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .slide-2 .line span:nth-child(1) { animation: softUp 0.8s ease 0.3s forwards; }
+  .slide-2 .line span:nth-child(2) { animation: softUp 0.8s ease 1.0s forwards; }
+
+  /* 슬라이드 3: 터지는 타이틀 */
+  .slide-3 {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #fda085 100%);
+  }
+  .slide-3 .big-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(40px, 10vw, 90px);
+    color: #fff;
+    text-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+    text-align: center;
+    line-height: 1.3;
+    animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  }
+  .slide-3 .year-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(5px);
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-size: clamp(14px, 3vw, 20px);
+    color: #fff;
+    margin-bottom: 20px;
+    font-weight: 700;
+    animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.1s forwards;
+    opacity: 0;
+  }
+  .slide-3 .confetti {
+    position: absolute;
+    font-size: 30px;
+    animation: confettiFall linear forwards;
+    opacity: 0;
+  }
+
+  /* 슬라이드 4: 감성 멘트 */
+  .slide-4 {
+    background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+  }
+  .slide-4 .message {
+    font-family: 'Gaegu', cursive;
+    font-size: clamp(24px, 6vw, 48px);
+    color: #fff;
+    text-align: center;
+    line-height: 1.8;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+  }
+  .slide-4 .message .word {
+    display: inline-block;
+    opacity: 0;
+    animation: wordPop 0.4s ease forwards;
+  }
+  .slide-4 .heart {
+    font-size: 40px;
+    margin-top: 24px;
+    opacity: 0;
+    animation: heartBeat 0.6s ease 1.8s forwards;
+  }
+
+  /* 슬라이드 5: 날짜+장소 (한 장으로) */
+  .slide-5 {
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  }
+  .slide-5 .info-block {
+    text-align: center;
+  }
+  .slide-5 .when-where {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+  .slide-5 .info-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    opacity: 0;
+  }
+  .slide-5 .info-item:nth-child(1) { animation: slideRight 0.6s ease 0.3s forwards; }
+  .slide-5 .info-item:nth-child(2) { animation: slideRight 0.6s ease 0.6s forwards; }
+  .slide-5 .info-item:nth-child(3) { animation: slideRight 0.6s ease 0.9s forwards; }
+  .slide-5 .info-item .icon {
+    font-size: 40px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  }
+  .slide-5 .info-item .text {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(24px, 6vw, 48px);
+    color: #fff;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+  }
+
+  /* 슬라이드 6: 감성 한 마디 */
+  .slide-6 {
+    background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+  }
+  .slide-6 .feeling {
+    font-family: 'Gaegu', cursive;
+    font-size: clamp(22px, 5vw, 40px);
+    color: #fff;
+    text-align: center;
+    line-height: 2;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+    opacity: 0;
+    animation: softUp 1s ease 0.3s forwards;
+  }
+  .slide-6 .feeling em {
+    font-style: normal;
+    background: rgba(255,255,255,0.3);
+    padding: 2px 12px;
+    border-radius: 8px;
+  }
+
+  /* 슬라이드 7: 최종 초대 카드 */
+  .slide-7 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px 20px;
+  }
+  .final-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    border-radius: 28px;
+    padding: 44px 32px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.2);
+    animation: floatUp 0.8s ease forwards;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .final-card .title-emoji {
+    font-size: 42px;
+    margin-bottom: 12px;
+    letter-spacing: 8px;
+  }
+  .final-card .card-title {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(22px, 5.5vw, 36px);
+    color: #fff;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .final-card .card-sub {
+    font-size: clamp(13px, 2.5vw, 16px);
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 28px;
+  }
+  .final-card .info-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: clamp(15px, 3.2vw, 20px);
+    color: rgba(255,255,255,0.92);
+    margin: 10px 0;
+    font-weight: 700;
+  }
+  .final-card .info-row .icon {
+    font-size: 22px;
+  }
+  .final-card .divider {
+    width: 50px;
+    height: 1px;
+    background: rgba(255,255,255,0.3);
+    margin: 28px auto;
+  }
+  .final-card .closing {
+    font-family: 'Gaegu', cursive;
+    font-size: clamp(18px, 4vw, 26px);
+    color: rgba(255,255,255,0.9);
+    line-height: 1.8;
+    margin-bottom: 20px;
+  }
+  .final-card .band-name {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(16px, 3.5vw, 22px);
+    color: #ffd700;
+    letter-spacing: 4px;
+  }
+
+  /* 진행 바 */
+  .progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.5);
+    transition: width 0.3s linear;
+    z-index: 100;
+  }
+
+  /* 다시보기 버튼 */
+  .replay-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.5s ease, background 0.3s ease;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .replay-btn:hover {
+    background: rgba(255,255,255,0.35);
+  }
+  .replay-btn.show {
+    opacity: 1;
+  }
+
+  /* 애니메이션들 */
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.3); opacity: 1; }
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+  @keyframes softUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes popIn {
+    from { transform: scale(0.3); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  @keyframes wordPop {
+    from { transform: scale(0.5) translateY(10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  @keyframes heartBeat {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes slideRight {
+    from { transform: translateX(-30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes floatUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* 배경 파티클 */
+  .particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<!-- 슬라이드 1: 어둠 속 스포트라이트 -->
+<div class="slide slide-1" id="slide-1">
+  <div class="spotlight">
+    <div class="emoji">🎸</div>
+  </div>
+  <div class="whisper">무대가 열립니다</div>
+</div>
+
+<!-- 슬라이드 2: 감성 도입 -->
+<div class="slide slide-2" id="slide-2">
+  <div class="line">
+    <span>5월 하늘 아래 울려 퍼질</span>
+    <span>우리들의 첫 무대</span>
+  </div>
+</div>
+
+<!-- 슬라이드 3: 터지는 타이틀 -->
+<div class="slide slide-3" id="slide-3">
+  <div class="year-badge">2026 심학중학교</div>
+  <div class="big-title">첫 야외<br>버스킹!</div>
+</div>
+
+<!-- 슬라이드 4: 감성 멘트 -->
+<div class="slide slide-4" id="slide-4">
+  <div class="message" id="typeMessage"></div>
+  <div class="heart" id="heart">🩷</div>
+</div>
+
+<!-- 슬라이드 5: 날짜 + 장소 -->
+<div class="slide slide-5" id="slide-5">
+  <div class="info-block">
+    <div class="when-where">
+      <div class="info-item">
+        <span class="icon">📅</span>
+        <span class="text">5월 29일 금요일</span>
+      </div>
+      <div class="info-item">
+        <span class="icon">⏰</span>
+        <span class="text">점심시간</span>
+      </div>
+      <div class="info-item">
+        <span class="icon">📍</span>
+        <span class="text">운동장</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 6: 감성 한 마디 -->
+<div class="slide slide-6" id="slide-6">
+  <div class="feeling">
+    여러분의 응원이 필요해요.<br>
+    <em>많이 와주세요.</em><br>
+    함께하면 더 빛나는 무대.
+  </div>
+</div>
+
+<!-- 슬라이드 7: 최종 초대 카드 -->
+<div class="slide slide-7" id="slide-7">
+  <div class="final-card">
+    <div class="title-emoji">🎸🎤🥁</div>
+    <div class="card-title">심학중 첫 야외 버스킹</div>
+    <div class="card-sub">올해 첫 무대, 여러분을 위한 시간</div>
+    <div class="info-row"><span class="icon">📅</span> 5월 29일 금요일</div>
+    <div class="info-row"><span class="icon">⏰</span> 점심시간</div>
+    <div class="info-row"><span class="icon">📍</span> 운동장</div>
+    <div class="divider"></div>
+    <div class="closing">
+      오셔서 열심히 응원해주세요.<br>
+      응원이 우리에겐 큰 힘이 됩니다.
+    </div>
+    <div class="band-name">심학중 밴드부</div>
+  </div>
+</div>
+
+<div class="progress" id="progress"></div>
+<button class="replay-btn" id="replayBtn" onclick="replay()">다시 보기 ▶</button>
+
+<script>
+  // 파티클 생성
+  (function() {
+    var container = document.getElementById('particles');
+    for (var i = 0; i < 25; i++) {
+      var p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      var size = (Math.random() * 5 + 3) + 'px';
+      p.style.width = size;
+      p.style.height = size;
+      p.style.animationDuration = (Math.random() * 10 + 8) + 's';
+      p.style.animationDelay = (Math.random() * 8) + 's';
+      container.appendChild(p);
+    }
+  })();
+
+  // 슬라이드 4 단어별 팝업
+  function animateWords() {
+    var msg = document.getElementById('typeMessage');
+    var text = '떨리는 마음으로\n준비했어요';
+    var words = text.split(/(\s|\n)/);
+    msg.innerHTML = '';
+    var delay = 0;
+    words.forEach(function(word) {
+      if (word === '\n') {
+        msg.appendChild(document.createElement('br'));
+        return;
+      }
+      if (word === ' ') {
+        msg.appendChild(document.createTextNode(' '));
+        return;
+      }
+      var span = document.createElement('span');
+      span.className = 'word';
+      span.textContent = word;
+      span.style.animationDelay = (delay * 0.25 + 0.2) + 's';
+      msg.appendChild(span);
+      msg.appendChild(document.createTextNode(' '));
+      delay++;
+    });
+  }
+
+  // 슬라이드 3 폭죽 효과
+  function spawnConfetti() {
+    var slide3 = document.getElementById('slide-3');
+    var emojis = ['🎵','🎶','✨','⭐','🌟','💫','🎉'];
+    for (var i = 0; i < 12; i++) {
+      var c = document.createElement('div');
+      c.className = 'confetti';
+      c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      c.style.left = (Math.random() * 100) + '%';
+      c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      c.style.animationDelay = (Math.random() * 1) + 's';
+      c.style.fontSize = (Math.random() * 20 + 20) + 'px';
+      slide3.appendChild(c);
+    }
+  }
+
+  var slides = document.querySelectorAll('.slide');
+  var totalSlides = slides.length;
+  var currentSlide = 0;
+  var durations = [6000, 5000, 5000, 5000, 5000, 5000, 0];
+  var progressBar = document.getElementById('progress');
+  var replayBtn = document.getElementById('replayBtn');
+  var timer = null;
+
+  function showSlide(index) {
+    slides.forEach(function(s) { s.classList.remove('active'); });
+    slides[index].classList.add('active');
+
+    var percent = ((index + 1) / totalSlides) * 100;
+    progressBar.style.width = percent + '%';
+
+    // 슬라이드별 특수 효과
+    if (index === 2) spawnConfetti();
+    if (index === 3) animateWords();
+
+    if (index === totalSlides - 1) {
+      setTimeout(function() { replayBtn.classList.add('show'); }, 1000);
+    }
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides - 1) {
+      currentSlide++;
+      showSlide(currentSlide);
+      if (durations[currentSlide] > 0) {
+        timer = setTimeout(nextSlide, durations[currentSlide]);
+      }
+    }
+  }
+
+  function replay() {
+    replayBtn.classList.remove('show');
+    // 기존 폭죽 제거
+    document.querySelectorAll('.confetti').forEach(function(el) { el.remove(); });
+    currentSlide = 0;
+    showSlide(0);
+    timer = setTimeout(nextSlide, durations[0]);
+  }
+
+  // 시작
+  showSlide(0);
+  timer = setTimeout(nextSlide, durations[0]);
+</script>
+
+</body>
+</html>
